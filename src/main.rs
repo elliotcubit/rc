@@ -99,7 +99,6 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, value: &str) {
         })
         .collect::<Vec<_>>();
 
-    // TODO if tty
     if stdout_isatty() {
         println!(
             "\t[{} ~> {}]\n",
@@ -115,10 +114,14 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, value: &str) {
 
     match decode(from_format, value) {
         Ok(data) => {
-            //
+            let do_leader = stdout_isatty() || to_formats.len() > 1;
             to_formats.into_iter().for_each(|format| {
-                // TODO different format when TTY
-                println!("{}: \"{}\"", format.to_str(), encode(format, data.clone()));
+                if do_leader {
+                    println!("{}: \"{}\"", format.to_str(), encode(format, data.clone()));
+                } else {
+                    // No newline if we're piping a single format
+                    print!("{}", encode(format, data.clone()))
+                }
             })
         }
         Err(e) => panic!("couldn't decode! {:?}", e),
