@@ -1,5 +1,4 @@
 extern crate clap;
-extern crate hex;
 extern crate isatty;
 
 mod codecs;
