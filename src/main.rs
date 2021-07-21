@@ -52,6 +52,12 @@ fn main() {
                 .default_value("text"),
         )
         .arg(
+            Arg::new("verbose")
+                .about("Provide more verbose output")
+                .short('v')
+                .multiple_occurrences(true),
+        )
+        .arg(
             Arg::new("value")
                 .about("What to convert")
                 .value_name("val")
@@ -69,19 +75,21 @@ fn main() {
         }
     };
     let _as = matches.value_of("as").unwrap_or_else(|| "text");
+    let verbosity = matches.occurrences_of("verbose");
     let value = &{
         if let Some(v) = matches.values_of("value") {
             v.collect::<Vec<_>>().join(" ")
         } else {
             // TODO read all available data from stdin
+            // Needs mild refactor for normal values to be Vec<u8> not String
             todo!()
         }
     };
 
-    decode_encode(from, to, _as, value);
+    decode_encode(from, to, _as, verbosity, value);
 }
 
-fn decode_encode(from: &str, to: Vec<&str>, _as: &str, value: &str) {
+fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: &str) {
     // These unwrap()s are safe since the argument parser validates these values exist
     let from_format = Format::from_str(from).unwrap();
     // TODO dedupe output formats
@@ -99,7 +107,7 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, value: &str) {
         })
         .collect::<Vec<_>>();
 
-    if stdout_isatty() {
+    if stdout_isatty() && (from_format == Format::Inferred || verbosity > 0) {
         println!(
             "\t[{} ~> {}]\n",
             from_format,
