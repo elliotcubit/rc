@@ -22,8 +22,6 @@ fn main() {
                 .value_name("format")
                 .short('f')
                 .long("from")
-                .default_value("__infer")
-                .hide_default_value(true)
                 .possible_values(&Format::all_variants()),
         )
         .arg(
@@ -33,8 +31,6 @@ fn main() {
                 .value_name("format")
                 .short('t')
                 .long("to")
-                .default_value("__infer")
-                .hide_default_value(true)
                 // Allow multiple values, but require explicit flag
                 // for each value so we can respect positional args
                 .number_of_values(1)
@@ -70,7 +66,7 @@ fn main() {
         if let Some(v) = matches.values_of("to") {
             v.collect::<Vec<_>>()
         } else {
-            vec!["__infer"]
+            vec!["ascii", "hex", "base64"]
         }
     };
     let _as = matches.value_of("as").unwrap_or_else(|| "text");
@@ -94,16 +90,7 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: &s
     // TODO dedupe output formats
     let to_formats = to
         .into_iter()
-        .flat_map(|v| {
-            let as_format = Format::from_str(v).unwrap();
-            if as_format == Format::Inferred {
-                // Default output formats
-                vec![Format::Ascii, Format::Hex, Format::Base64].into_iter()
-            } else {
-                // Or use any that we were provided
-                vec![as_format].into_iter()
-            }
-        })
+        .map(|v| Format::from_str(v).unwrap())
         .collect::<Vec<_>>();
 
     match decode(&from_format, value) {
@@ -142,8 +129,9 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: &s
 fn decode(f: &Format, value: &str) -> (Format, Result<Vec<u8>, Error>) {
     match f {
         Format::Hex => (Format::Hex, codecs::hex::HexCodec::decode(value)),
-        Format::Ascii => (Format::Hex, codecs::ascii::AsciiCodec::decode(value)),
-        Format::Base64 => (Format::Hex, codecs::base64::Base64Codec::decode(value)),
+        Format::Ascii => (Format::Ascii, codecs::ascii::AsciiCodec::decode(value)),
+        Format::Base64 => (Format::Base64, codecs::base64::Base64Codec::decode(value)),
+        Format::Raw => (Format::Raw, codecs::raw::RawCodec::decode(value)),
         Format::Inferred => infer(value),
         _ => todo!(),
     }
@@ -154,6 +142,7 @@ fn encode(f: Format, data: Vec<u8>) -> String {
         Format::Hex => codecs::hex::HexCodec::encode(data),
         Format::Ascii => codecs::ascii::AsciiCodec::encode(data),
         Format::Base64 => codecs::base64::Base64Codec::encode(data),
+        Format::Raw => codecs::raw::RawCodec::encode(data),
         _ => todo!(),
     }
 }
@@ -169,5 +158,5 @@ fn infer(data: &str) -> (Format, Result<Vec<u8>, Error>) {
         return (Format::Ascii, Ok(v));
     }
     // TODO raw bytes as the fallback
-    return (Format::Ascii, codecs::ascii::AsciiCodec::decode(data));
+    return (Format::Raw, codecs::raw::RawCodec::decode(data));
 }
