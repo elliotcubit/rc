@@ -106,21 +106,25 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: &s
         })
         .collect::<Vec<_>>();
 
-    if stdout_isatty() && (from_format == Format::Inferred || verbosity > 0) {
-        println!(
-            "\t[{} ~> {}]\n",
-            from_format,
-            to_formats
-                .clone()
-                .into_iter()
-                .map(|v| v.to_str())
-                .collect::<Vec<_>>()
-                .join(", ")
-        );
-    }
-
-    match decode(from_format, value) {
-        Ok(data) => {
+    match decode(&from_format, value) {
+        (used_format, Ok(data)) => {
+            if stdout_isatty() && (from_format == Format::Inferred || verbosity > 0) {
+                println!(
+                    "\t[{}{}~> {}]\n",
+                    used_format,
+                    if used_format != from_format {
+                        " (inferred) "
+                    } else {
+                        " "
+                    },
+                    to_formats
+                        .clone()
+                        .into_iter()
+                        .map(|v| v.to_str())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+            }
             let do_leader = stdout_isatty() || to_formats.len() > 1;
             to_formats.into_iter().for_each(|format| {
                 if do_leader {
@@ -131,15 +135,15 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: &s
                 }
             })
         }
-        Err(e) => panic!("couldn't decode! {:?}", e),
+        (_, Err(e)) => panic!("couldn't decode! {:?}", e),
     }
 }
 
-fn decode(f: Format, value: &str) -> Result<Vec<u8>, Error> {
+fn decode(f: &Format, value: &str) -> (Format, Result<Vec<u8>, Error>) {
     match f {
-        Format::Hex => codecs::hex::HexCodec::decode(value),
-        Format::Ascii => codecs::ascii::AsciiCodec::decode(value),
-        Format::Base64 => codecs::base64::Base64Codec::decode(value),
+        Format::Hex => (Format::Hex, codecs::hex::HexCodec::decode(value)),
+        Format::Ascii => (Format::Hex, codecs::ascii::AsciiCodec::decode(value)),
+        Format::Base64 => (Format::Hex, codecs::base64::Base64Codec::decode(value)),
         Format::Inferred => infer(value),
         _ => todo!(),
     }
@@ -154,14 +158,14 @@ fn encode(f: Format, data: Vec<u8>) -> String {
     }
 }
 
-fn infer(data: &str) -> Result<Vec<u8>, Error> {
+fn infer(data: &str) -> (Format, Result<Vec<u8>, Error>) {
     // TODO
     if let Ok(v) = codecs::hex::HexCodec::decode(data) {
-        return Ok(v);
+        return (Format::Hex, Ok(v));
     }
     if let Ok(v) = codecs::base64::Base64Codec::decode(data) {
-        return Ok(v);
+        return (Format::Base64, Ok(v));
     }
     // instead, always fall back to raw bytes TODO
-    return codecs::ascii::AsciiCodec::decode(data);
+    return (Format::Ascii, codecs::ascii::AsciiCodec::decode(data));
 }
