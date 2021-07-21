@@ -159,13 +159,15 @@ fn encode(f: Format, data: Vec<u8>) -> String {
 }
 
 fn infer(data: &str) -> (Format, Result<Vec<u8>, Error>) {
-    // TODO
     if let Ok(v) = codecs::hex::HexCodec::decode(data) {
         return (Format::Hex, Ok(v));
     }
     if let Ok(v) = codecs::base64::Base64Codec::decode(data) {
         return (Format::Base64, Ok(v));
     }
-    // instead, always fall back to raw bytes TODO
+    if let Ok(v) = codecs::ascii::AsciiCodec::decode(data) {
+        return (Format::Ascii, Ok(v));
+    }
+    // TODO raw bytes as the fallback
     return (Format::Ascii, codecs::ascii::AsciiCodec::decode(data));
 }
