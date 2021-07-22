@@ -112,7 +112,7 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: &s
                         .join(", ")
                 );
             }
-            let do_leader = stdout_isatty() || to_formats.len() > 1;
+            let do_leader = (verbosity > 0 && stdout_isatty()) || to_formats.len() > 1;
             to_formats.into_iter().for_each(|format| {
                 if do_leader {
                     println!("{}: \"{}\"", format.to_str(), encode(format, data.clone()));
