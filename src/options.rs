@@ -16,7 +16,7 @@ pub enum Format {
 
 impl Format {
     pub fn all_variants() -> Vec<&'static str> {
-        vec!["b2", "b8", "b10", "b16", "ascii", "hex", "base64", "raw"]
+        vec!["b2", "b8", "b10", "b16", "utf8", "hex", "base64", "raw"]
     }
 
     pub fn from_str(s: &str) -> Option<Self> {
