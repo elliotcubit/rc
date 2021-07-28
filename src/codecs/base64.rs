@@ -4,15 +4,15 @@ use super::error::Error;
 pub struct Base64Codec {}
 
 impl Codec for Base64Codec {
-    fn decode(s: &str) -> Result<Vec<u8>, Error> {
+    fn decode(s: Vec<u8>) -> Result<Vec<u8>, Error> {
         if s.len() % 4 != 0 {
             Err(Error::new(
                 "Invalid number of characters for base64 string".to_string(),
             ))
         } else {
             let mut tail_pd = 0;
-            s.chars()
-                .map(|c| match Self::char_to_val(c) {
+            s.into_iter()
+                .map(|c| match Self::char_to_val(c as char) {
                     // If we have a valid character come after a padding, error out
                     // Otherwise just pass values along
                     Ok(Some(_)) if tail_pd > 0 => {
@@ -156,24 +156,24 @@ fn encode() {
 fn decode() {
     use std::collections::HashMap;
 
-    let tests: HashMap<&str, Result<Vec<u8>, Error>> = [
-        ("aGVsbG8gd29ybGQ=", Ok("hello world".as_bytes().to_vec())),
-        ("dHdvcGFkcw==", Ok("twopads".as_bytes().to_vec())),
-        ("dGhyZWVwYWRz", Ok("threepads".as_bytes().to_vec())),
-        ("", Ok("".as_bytes().to_vec())),
-        ("Zg==", Ok("f".as_bytes().to_vec())),
-        ("Zm8=", Ok("fo".as_bytes().to_vec())),
-        ("Zm9v", Ok("foo".as_bytes().to_vec())),
-        ("Zm9vYmFy", Ok("foobar".as_bytes().to_vec())),
+    let tests: HashMap<Vec<u8>, Result<Vec<u8>, Error>> = [
+        ("aGVsbG8gd29ybGQ=".as_bytes().to_vec(), Ok("hello world".as_bytes().to_vec())),
+        ("dHdvcGFkcw==".as_bytes().to_vec(), Ok("twopads".as_bytes().to_vec())),
+        ("dGhyZWVwYWRz".as_bytes().to_vec(), Ok("threepads".as_bytes().to_vec())),
+        ("".as_bytes().to_vec(), Ok("".as_bytes().to_vec())),
+        ("Zg==".as_bytes().to_vec(), Ok("f".as_bytes().to_vec())),
+        ("Zm8=".as_bytes().to_vec(), Ok("fo".as_bytes().to_vec())),
+        ("Zm9v".as_bytes().to_vec(), Ok("foo".as_bytes().to_vec())),
+        ("Zm9vYmFy".as_bytes().to_vec(), Ok("foobar".as_bytes().to_vec())),
         // "A test string that includes all 64 possible Base64 symbols"
         // Thank you David Cary for your 2011 StackOverflow answer :)
         (
-            "U28/PHA+VGhpcyA0LCA1LCA2LCA3LCA4LCA5LCB6LCB7LCB8LCB9IHRlc3RzIEJhc2U2NCBlbmNvZGVyLiBTaG93IG1lOiBALCBBLCBCLCBDLCBELCBFLCBGLCBHLCBILCBJLCBKLCBLLCBMLCBNLCBOLCBPLCBQLCBRLCBSLCBTLCBULCBVLCBWLCBXLCBYLCBZLCBaLCBbLCBcLCBdLCBeLCBfLCBgLCBhLCBiLCBjLCBkLCBlLCBmLCBnLCBoLCBpLCBqLCBrLCBsLCBtLCBuLCBvLCBwLCBxLCByLCBzLg==",
+            "U28/PHA+VGhpcyA0LCA1LCA2LCA3LCA4LCA5LCB6LCB7LCB8LCB9IHRlc3RzIEJhc2U2NCBlbmNvZGVyLiBTaG93IG1lOiBALCBBLCBCLCBDLCBELCBFLCBGLCBHLCBILCBJLCBKLCBLLCBMLCBNLCBOLCBPLCBQLCBRLCBSLCBTLCBULCBVLCBWLCBXLCBYLCBZLCBaLCBbLCBcLCBdLCBeLCBfLCBgLCBhLCBiLCBjLCBkLCBlLCBmLCBnLCBoLCBpLCBqLCBrLCBsLCBtLCBuLCBvLCBwLCBxLCByLCBzLg==".as_bytes().to_vec(),
             Ok("So?<p>This 4, 5, 6, 7, 8, 9, z, {, |, } tests Base64 encoder. Show me: @, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, [, \\, ], ^, _, `, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s.".as_bytes().to_vec())
         ),
-        ("Z====", Err(Error::new("Invalid number of characters for base64 string".to_string()))),
-        ("Z===", Err(Error::new("Only two padding bytes are allowed for base64".to_string()))),
-        ("=ZZZ", Err(Error::new("Non-tailing padding".to_string())))
+        ("Z====".as_bytes().to_vec(), Err(Error::new("Invalid number of characters for base64 string".to_string()))),
+        ("Z===".as_bytes().to_vec(), Err(Error::new("Only two padding bytes are allowed for base64".to_string()))),
+        ("=ZZZ".as_bytes().to_vec(), Err(Error::new("Non-tailing padding".to_string())))
     ]
     .iter()
     .cloned()

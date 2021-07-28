@@ -4,29 +4,32 @@ Use `rc` to perform encoding changes and text transforms easily.
 
 ```
 # Specify encodings to convert from and to
-$ rc --from hex --to ascii 68656c6c6f20726321
+$ rc --from hex --to utf8 68656c6c6f20726321
 hello rc!
 
 # Infer the existing encoding
-$ rc -t ascii 68656c6c6f20726321
-	[hex (inferred) ~> ascii]
+$ rc -t utf8 68656c6c6f20726321
+	[hex (inferred) ~> utf8]
 
 hello rc!
 
 # When not specified, output common encodings
 $ rc 68656c6c6f20726321
-	[hex (inferred) ~> ascii, hex, base 64]
+	[hex (inferred) ~> utf8, hex, base 64]
 
-ascii: "hello rc!"
+utf8: "hello rc!"
 hex: "68656c6c6f20726321"
 base 64: "aGVsbG8gcmMh"
 
 # Specify multiple output formats
-$ rc -t ascii -t base64 68656c6c6f20726321
-	[hex (inferred) ~> ascii, base 64]
+$ rc -t utf8 -t base64 68656c6c6f20726321
+	[hex (inferred) ~> utf8, base 64]
 
-ascii: "hello rc!"
+utf8: "hello rc!"
 base 64: "aGVsbG8gcmMh"
+
+echo "something\x05\x05" | rc -f raw -t hex
+736f6d657468696e670505
 ```
 
 `rc` is in early stages and may change dramatically. It's missing _many_ features:
@@ -37,7 +40,7 @@ base 64: "aGVsbG8gcmMh"
 - Crypto things
 - Actual text transforms instead of encoding changes
 - Array output
-- Supporting escaped bytes in input (`echo -e`'s behavior)
+- Showing non-printable characters as escaped equivalents.
 
 ```
 # TODO
@@ -50,7 +53,6 @@ $ rc --array --container "[]" --delimiter ""
 ```
 
 - Separating output every n bytes / characters
-- Reading from stdin
 - Converting a stream instead of as a batch
 
 Since this is mostly a learning project for Rust, performance will likely be _not great_.
@@ -60,7 +62,6 @@ Since this is mostly a learning project for Rust, performance will likely be _no
 #### Encodings
 
 - [x] raw bytes
-- [x] 7-bit ascii
 - [ ] integer
 	- `414243 -> 65 66 67`
 - [x] hex
@@ -68,7 +69,7 @@ Since this is mostly a learning project for Rust, performance will likely be _no
 - [ ] base32
 - [ ] binary
 - [ ] ascii85
-- [ ] utf8
+- [x] utf8
 - [ ] url
 	- `like*this -> like%2athis`
 - [ ] spelling alphabet

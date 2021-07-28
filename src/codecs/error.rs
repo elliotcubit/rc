@@ -1,6 +1,6 @@
 #[derive(Debug, Clone, PartialEq)]
 pub struct Error {
-    err: String,
+    pub err: String,
 }
 
 impl Error {

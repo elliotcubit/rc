@@ -4,8 +4,8 @@ use super::error::Error;
 pub struct RawCodec {}
 
 impl Codec for RawCodec {
-    fn decode(s: &str) -> Result<Vec<u8>, Error> {
-        Ok(s.as_bytes().to_vec())
+    fn decode(s: Vec<u8>) -> Result<Vec<u8>, Error> {
+        Ok(s)
     }
 
     fn encode(data: Vec<u8>) -> String {

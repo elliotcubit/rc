@@ -4,13 +4,14 @@ use super::error::Error;
 pub struct HexCodec {}
 
 impl Codec for HexCodec {
-    fn decode(s: &str) -> Result<Vec<u8>, Error> {
-        let mut g = s.to_string();
+    fn decode(s: Vec<u8>) -> Result<Vec<u8>, Error> {
         if s.len() % 2 == 1 {
-            g = "0".to_string();
-            g.push_str(s)
+            return Err(Error::new(
+                "Invalid number of characters for hex string".to_string(),
+            ));
         }
-        g.chars()
+        s.into_iter()
+            .map(|v| v as char)
             .map(Self::char_to_nibble)
             .collect::<Result<Vec<u8>, Error>>()
             .map(|nibbles| {
@@ -75,13 +76,15 @@ fn encode() {
 fn decode() {
     use std::collections::HashMap;
 
-    let tests: HashMap<&str, Result<Vec<u8>, Error>> = [
+    let tests: HashMap<Vec<u8>, Result<Vec<u8>, Error>> = [
         (
-            "6162636465666768696a6b6c6d6e6f707172737475767778797a",
+            "6162636465666768696a6b6c6d6e6f707172737475767778797a"
+                .as_bytes()
+                .to_vec(),
             Ok("abcdefghijklmnopqrstuvwxyz".as_bytes().to_vec()),
         ),
         (
-            "ffgg",
+            "ffgg".as_bytes().to_vec(),
             Err(Error::new("Invalid hex character g".to_string())),
         ),
     ]
