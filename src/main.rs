@@ -10,8 +10,6 @@ use codecs::error::Error;
 use isatty::stdout_isatty;
 use options::Format;
 use std::ffi::OsString;
-// Gives OsString the into_vec() method
-use std::os::unix::ffi::OsStringExt;
 use std::io;
 use std::io::Read;
 use std::process;
@@ -30,6 +28,8 @@ fn u8_arg(s: &OsString) -> Result<Vec<u8>, Error> {
 // Linux can have anything in this string. We'll just return the bytes.
 #[cfg(not(target_os = "windows"))]
 fn u8_arg(s: &OsString) -> Result<Vec<u8>, Error> {
+    // Gives OsString the into_vec() method
+    use std::os::unix::ffi::OsStringExt;
     Ok(s.to_owned().into_vec())
 }
 
