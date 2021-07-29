@@ -1,10 +1,15 @@
 use super::codec::Codec;
 use super::error::Error;
+use crate::Format;
 
 pub struct Base64Codec {}
 
 impl Codec for Base64Codec {
-    fn decode(s: Vec<u8>) -> Result<Vec<u8>, Error> {
+    fn format(&self) -> Format {
+        Format::Base64
+    }
+
+    fn decode(&self, s: Vec<u8>) -> Result<Vec<u8>, Error> {
         if s.len() % 4 != 0 {
             Err(Error::new(
                 "Invalid number of characters for base64 string".to_string(),
@@ -58,7 +63,7 @@ impl Codec for Base64Codec {
         }
     }
 
-    fn encode(data: Vec<u8>) -> String {
+    fn encode(&self, data: Vec<u8>) -> String {
         data.chunks(3)
             .flat_map(|group| match group.len() {
                 1 => vec![
@@ -93,8 +98,6 @@ impl Codec for Base64Codec {
     }
 }
 
-// TODO This could be way better, since most of them are
-// sequential, but I went the lazy route for now
 impl Base64Codec {
     pub fn char_to_val(c: char) -> Result<Option<u8>, Error> {
         if c == '=' {
@@ -147,8 +150,9 @@ fn encode() {
     .cloned()
     .collect();
 
+    let codec = Base64Codec {};
     for (expected, bytes) in tests {
-        assert_eq!(expected, Base64Codec::encode(bytes));
+        assert_eq!(expected, codec.encode(bytes));
     }
 }
 
@@ -179,7 +183,8 @@ fn decode() {
     .cloned()
     .collect();
 
+    let codec = Base64Codec {};
     for (bytes, expected) in tests {
-        assert_eq!(expected, Base64Codec::decode(bytes));
+        assert_eq!(expected, codec.decode(bytes));
     }
 }

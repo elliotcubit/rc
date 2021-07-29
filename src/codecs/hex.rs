@@ -1,10 +1,15 @@
 use super::codec::Codec;
 use super::error::Error;
+use crate::Format;
 
 pub struct HexCodec {}
 
 impl Codec for HexCodec {
-    fn decode(s: Vec<u8>) -> Result<Vec<u8>, Error> {
+    fn format(&self) -> Format {
+        Format::Hex
+    }
+
+    fn decode(&self, s: Vec<u8>) -> Result<Vec<u8>, Error> {
         if s.len() % 2 == 1 {
             return Err(Error::new(
                 "Invalid number of characters for hex string".to_string(),
@@ -22,7 +27,7 @@ impl Codec for HexCodec {
             })
     }
 
-    fn encode(data: Vec<u8>) -> String {
+    fn encode(&self, data: Vec<u8>) -> String {
         data.into_iter()
             .map(|byte| {
                 format!(
@@ -67,8 +72,9 @@ fn encode() {
     .cloned()
     .collect();
 
+    let codec = HexCodec {};
     for (expected, bytes) in tests {
-        assert_eq!(expected, HexCodec::encode(bytes));
+        assert_eq!(expected, codec.encode(bytes));
     }
 }
 
@@ -92,7 +98,8 @@ fn decode() {
     .cloned()
     .collect();
 
+    let codec = HexCodec {};
     for (data, expected) in tests {
-        assert_eq!(expected, HexCodec::decode(data));
+        assert_eq!(expected, codec.decode(data));
     }
 }

@@ -135,7 +135,7 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: Ve
         .map(|v| Format::from_str(v).unwrap())
         .collect::<Vec<_>>();
 
-    match decode(&from_format, value) {
+    match decode(from_format, value) {
         (used_format, Ok(data)) => {
             if stdout_isatty() && (from_format == Format::Inferred || verbosity > 0) {
                 println!(
@@ -171,37 +171,56 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: Ve
     }
 }
 
-fn decode(f: &Format, value: Vec<u8>) -> (Format, Result<Vec<u8>, Error>) {
-    match f {
-        Format::Hex => (Format::Hex, codecs::hex::HexCodec::decode(value)),
-        Format::Utf8 => (Format::Utf8, codecs::utf8::Utf8Codec::decode(value)),
-        Format::Base64 => (Format::Base64, codecs::base64::Base64Codec::decode(value)),
-        Format::Raw => (Format::Raw, codecs::raw::RawCodec::decode(value)),
-        Format::Inferred => infer(value),
-        _ => todo!(),
-    }
+// Defines the order to check codecs in for decoding, encoding,
+// and inferring codecs. Order is significant.
+fn codecs_preferred_order() -> Vec<Box<dyn Codec>> {
+    vec![
+        // Rule out hex before assuming base 64
+        Box::new(codecs::hex::HexCodec {}),
+        // Rule out base 64 before assuming utf8
+        Box::new(codecs::base64::Base64Codec {}),
+        // Rule out utf8 before assuming it's nothing
+        Box::new(codecs::utf8::Utf8Codec {}),
+        Box::new(codecs::raw::RawCodec {}),
+    ]
+}
+
+fn decode(f: Format, value: Vec<u8>) -> (Format, Result<Vec<u8>, Error>) {
+    codecs_preferred_order()
+        .into_iter()
+        .find_map(|codec| {
+            if f == Format::Inferred {
+                if let Ok(result) = codec.decode(value.clone()) {
+                    return Some((codec.format(), Ok(result)));
+                } else {
+                    None
+                }
+            } else {
+                if codec.format() == f {
+                    return Some((f, codec.decode(value.clone())));
+                } else {
+                    return None;
+                }
+            }
+        })
+        .unwrap_or_else(|| {
+            println!("Unsupported format {}", f);
+            process::exit(1)
+        })
 }
 
 fn encode(f: Format, data: Vec<u8>) -> String {
-    match f {
-        Format::Hex => codecs::hex::HexCodec::encode(data),
-        Format::Utf8 => codecs::utf8::Utf8Codec::encode(data),
-        Format::Base64 => codecs::base64::Base64Codec::encode(data),
-        Format::Raw => codecs::raw::RawCodec::encode(data),
-        _ => todo!(),
-    }
-}
-
-fn infer(data: Vec<u8>) -> (Format, Result<Vec<u8>, Error>) {
-    if let Ok(v) = codecs::hex::HexCodec::decode(data.clone()) {
-        return (Format::Hex, Ok(v));
-    }
-    if let Ok(v) = codecs::base64::Base64Codec::decode(data.clone()) {
-        return (Format::Base64, Ok(v));
-    }
-    if let Ok(v) = codecs::utf8::Utf8Codec::decode(data.clone()) {
-        return (Format::Utf8, Ok(v));
-    }
-    // TODO raw bytes as the fallback
-    return (Format::Raw, codecs::raw::RawCodec::decode(data.clone()));
+    codecs_preferred_order()
+        .into_iter()
+        .find_map(|codec| {
+            if codec.format() == f {
+                return Some(codec.encode(data.clone()));
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| {
+            println!("Unsupported format {}", f);
+            process::exit(1)
+        })
 }
