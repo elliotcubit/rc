@@ -10,7 +10,7 @@ impl Codec for BinaryCodec {
     }
 
     fn decode(&self, s: Vec<u8>) -> Result<Vec<u8>, Error> {
-        String::from_utf8(s.clone())
+        match String::from_utf8(s.clone())
             .map(|v| {
                 let mut new = v.clone();
                 new.retain(|c| !c.is_whitespace());
@@ -23,28 +23,42 @@ impl Codec for BinaryCodec {
                         if c == 0x30 || c == 0x31 {
                             Ok(c - 0x30)
                         } else {
-                            Err(Error::new(format!("Invalid character for binary {}", c)))
+                            Err(Error::new(format!(
+                                "Invalid character for binary {}",
+                                c as char
+                            )))
                         }
                     })
                     .collect::<Result<Vec<u8>, Error>>()
                     .map(|bits| {
-                        bits.chunks(8)
-                            .map(|byte| {
-                                byte[0] << 7
-                                    | byte[1] << 6
-                                    | byte[2] << 5
-                                    | byte[3] << 4
-                                    | byte[4] << 3
-                                    | byte[5] << 2
-                                    | byte[6] << 1
-                                    | byte[7]
-                            })
-                            .collect::<Vec<u8>>()
+                        if bits.len() % 8 != 0 {
+                            Err(Error::new(
+                                "Invalid number of characters for binary".to_string(),
+                            ))
+                        } else {
+                            Ok(bits
+                                .chunks(8)
+                                .map(|byte| {
+                                    byte[0] << 7
+                                        | byte[1] << 6
+                                        | byte[2] << 5
+                                        | byte[3] << 4
+                                        | byte[4] << 3
+                                        | byte[5] << 2
+                                        | byte[6] << 1
+                                        | byte[7]
+                                })
+                                .collect::<Vec<u8>>())
+                        }
                     })
-            })
-            .unwrap_or(Err(Error::new(
-                "Input to binary not valid utf8".to_string(),
-            )))
+            }) {
+            // There has to be an easier way to flatten these results
+            Ok(v) => match v {
+                Ok(v) => v,
+                Err(e) => Err(e),
+            },
+            Err(_) => Err(Error::new("Input to binary was invalid utf8".to_string())),
+        }
     }
 
     fn encode(&self, data: Vec<u8>) -> String {
