@@ -154,10 +154,25 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: Ve
                         .join(", ")
                 );
             }
+
+            let max_leader_length = to_formats
+                .clone()
+                .into_iter()
+                .map(|s| s.to_str().len())
+                .max()
+                // Safe since we are guaranteed to have at least one element
+                .unwrap();
+
             let do_leader = (verbosity > 0 && stdout_isatty()) || to_formats.len() > 1;
             to_formats.into_iter().for_each(|format| {
                 if do_leader {
-                    println!("{}: \"{}\"", format.to_str(), encode(format, data.clone()));
+                    println!(
+                        "{}: {: >width$}\"{}\"",
+                        format.to_str(),
+                        "",
+                        encode(format, data.clone()),
+                        width = max_leader_length - format.to_str().len(),
+                    );
                 } else {
                     // No newline if we're piping a single format
                     print!("{}", encode(format, data.clone()))
