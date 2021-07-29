@@ -175,6 +175,8 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: Ve
 // and inferring codecs. Order is significant.
 fn codecs_preferred_order() -> Vec<Box<dyn Codec>> {
     vec![
+        // Rule out binary before assuming hex
+        Box::new(codecs::binary::BinaryCodec {}),
         // Rule out hex before assuming base 64
         Box::new(codecs::hex::HexCodec {}),
         // Rule out base 64 before assuming utf8
