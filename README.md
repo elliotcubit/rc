@@ -70,7 +70,7 @@ base 64: "aGVsbG8gbmV0d29yaw=="
 - [x] base64
 - [x] utf8
 - [ ] base32
-- [ ] binary
+- [x] binary
 - [ ] ascii85
 - [ ] url
 - [ ] spelling alphabet
