@@ -221,7 +221,7 @@ fn decode(f: Format, value: Vec<u8>) -> (Format, Result<Vec<u8>, Error>) {
     codecs_preferred_order()
         .into_iter()
         .find_map(|codec| {
-            if f == Format::Inferred {
+            if f == Format::Inferred && codec.inferrable() {
                 if let Ok(result) = codec.decode(value.clone()) {
                     return Some((codec.format(), Ok(result)));
                 } else {
