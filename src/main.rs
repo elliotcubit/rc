@@ -165,17 +165,24 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: Ve
 
             let do_leader = (verbosity > 0 && stdout_isatty()) || to_formats.len() > 1;
             to_formats.into_iter().for_each(|format| {
-                if do_leader {
-                    println!(
+                match (encode(format, data.clone()), do_leader) {
+                    (Ok(encoded), true) => println!(
                         "{}: {: >width$}\"{}\"",
                         format.to_str(),
                         "",
-                        encode(format, data.clone()),
+                        encoded,
                         width = max_leader_length - format.to_str().len(),
-                    );
-                } else {
+                    ),
                     // No newline if we're piping a single format
-                    print!("{}", encode(format, data.clone()))
+                    (Ok(encoded), false) => print!("{}", encoded),
+                    (Err(e), true) => println!(
+                        "{}: {: >width$}{}",
+                        format.to_str(),
+                        "",
+                        format!("<encoding failure>: {}", e.err),
+                        width = max_leader_length - format.to_str().len()
+                    ),
+                    (Err(e), false) => print!("<encoding failure>: {}", e.err),
                 }
             })
         }
@@ -190,6 +197,7 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: Ve
 // and inferring codecs. Order is significant.
 fn codecs_preferred_order() -> Vec<Box<dyn Codec>> {
     vec![
+        Box::new(codecs::spelling::SpellingCodec {}),
         // Rule out binary before assuming hex
         Box::new(codecs::binary::BinaryCodec {}),
         // Rule out hex before assuming base 64
@@ -226,7 +234,7 @@ fn decode(f: Format, value: Vec<u8>) -> (Format, Result<Vec<u8>, Error>) {
         })
 }
 
-fn encode(f: Format, data: Vec<u8>) -> String {
+fn encode(f: Format, data: Vec<u8>) -> Result<String, Error> {
     codecs_preferred_order()
         .into_iter()
         .find_map(|codec| {

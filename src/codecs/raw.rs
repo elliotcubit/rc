@@ -13,7 +13,8 @@ impl Codec for RawCodec {
         Ok(s)
     }
 
-    fn encode(&self, data: Vec<u8>) -> String {
-        data.into_iter().map(|v| v as char).collect()
+    // TODO this aint it
+    fn encode(&self, data: Vec<u8>) -> Result<String, Error> {
+        Ok(data.into_iter().map(|v| v as char).collect())
     }
 }

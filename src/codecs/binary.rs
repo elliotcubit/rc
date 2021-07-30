@@ -61,8 +61,9 @@ impl Codec for BinaryCodec {
         }
     }
 
-    fn encode(&self, data: Vec<u8>) -> String {
-        data.into_iter()
+    fn encode(&self, data: Vec<u8>) -> Result<String, Error> {
+        Ok(data
+            .into_iter()
             .map(|byte| {
                 format!(
                     "{}{}{}{}{}{}{}{}",
@@ -77,6 +78,6 @@ impl Codec for BinaryCodec {
                 )
             })
             .collect::<Vec<String>>()
-            .join(" ")
+            .join(" "))
     }
 }

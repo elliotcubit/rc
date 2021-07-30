@@ -11,15 +11,14 @@ pub enum Format {
     Hex,
     Base64,
     Binary,
+    Spelling,
     Raw,
     Inferred,
 }
 
 impl Format {
     pub fn all_variants() -> Vec<&'static str> {
-        vec![
-            "b2", "b8", "b10", "b16", "utf8", "hex", "base64", "binary", "raw",
-        ]
+        vec!["utf8", "hex", "base64", "binary", "spelling", "raw"]
     }
 
     pub fn from_str(s: &str) -> Option<Self> {
@@ -33,6 +32,7 @@ impl Format {
             "hex" => Some(Self::Hex),
             "base64" => Some(Self::Base64),
             "binary" => Some(Self::Binary),
+            "spelling" => Some(Self::Spelling),
             "raw" => Some(Self::Raw),
             "__infer" => Some(Self::Inferred),
             _ => None,
@@ -50,6 +50,7 @@ impl Format {
             Self::Hex => "hex",
             Self::Base64 => "base 64",
             Self::Binary => "binary",
+            Self::Spelling => "spelling",
             Self::Raw => "raw bytes",
             // This shouldn't really happen, since if we ever have an inferred enum
             // we should be converting it to a relevant one

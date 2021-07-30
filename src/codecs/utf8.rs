@@ -17,7 +17,7 @@ impl Codec for Utf8Codec {
     }
 
     // TODO well, this can fail... or at least be invalid
-    fn encode(&self, data: Vec<u8>) -> String {
-        data.into_iter().map(|v| v as char).collect()
+    fn encode(&self, data: Vec<u8>) -> Result<String, Error> {
+        Ok(data.into_iter().map(|v| v as char).collect())
     }
 }

@@ -27,8 +27,9 @@ impl Codec for HexCodec {
             })
     }
 
-    fn encode(&self, data: Vec<u8>) -> String {
-        data.into_iter()
+    fn encode(&self, data: Vec<u8>) -> Result<String, Error> {
+        Ok(data
+            .into_iter()
             .map(|byte| {
                 format!(
                     "{}{}",
@@ -37,7 +38,7 @@ impl Codec for HexCodec {
                 )
             })
             .collect::<Vec<String>>()
-            .join("")
+            .join(""))
     }
 }
 
@@ -74,7 +75,7 @@ fn encode() {
 
     let codec = HexCodec {};
     for (expected, bytes) in tests {
-        assert_eq!(expected, codec.encode(bytes));
+        assert_eq!(expected, codec.encode(bytes).unwrap());
     }
 }
 

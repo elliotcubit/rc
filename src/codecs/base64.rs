@@ -63,8 +63,9 @@ impl Codec for Base64Codec {
         }
     }
 
-    fn encode(&self, data: Vec<u8>) -> String {
-        data.chunks(3)
+    fn encode(&self, data: Vec<u8>) -> Result<String, Error> {
+        Ok(data
+            .chunks(3)
             .flat_map(|group| match group.len() {
                 1 => vec![
                     Some((group[0] & 0b11111100) >> 2),
@@ -94,7 +95,7 @@ impl Codec for Base64Codec {
                 Some(v) => Self::val_to_char(v),
                 None => '=',
             })
-            .collect()
+            .collect())
     }
 }
 
@@ -152,7 +153,7 @@ fn encode() {
 
     let codec = Base64Codec {};
     for (expected, bytes) in tests {
-        assert_eq!(expected, codec.encode(bytes));
+        assert_eq!(expected, codec.encode(bytes).unwrap());
     }
 }
 
