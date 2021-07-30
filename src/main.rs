@@ -197,11 +197,18 @@ fn decode_encode(from: &str, to: Vec<&str>, _as: &str, verbosity: u64, value: Ve
 // and inferring codecs. Order is significant.
 fn codecs_preferred_order() -> Vec<Box<dyn Codec>> {
     vec![
-        Box::new(codecs::spelling::SpellingCodec {}),
+        /*
+           Codecs that can't be assumed must be first
+        */
+        Box::new(codecs::rot13::Rot13Codec {}),
+        /*
+            Inferrable codecs
+        */
         // Rule out binary before assuming hex
         Box::new(codecs::binary::BinaryCodec {}),
         // Rule out hex before assuming base 64
         Box::new(codecs::hex::HexCodec {}),
+        Box::new(codecs::spelling::SpellingCodec {}),
         // Rule out base 64 before assuming utf8
         Box::new(codecs::base64::Base64Codec {}),
         // Rule out utf8 before assuming it's nothing

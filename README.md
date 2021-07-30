@@ -73,7 +73,7 @@ base 64: "aGVsbG8gbmV0d29yaw=="
 - [x] binary
 - [ ] ascii85
 - [ ] url
-- [ ] spelling alphabet
+- [x] spelling alphabet
 
 ### Number bases
 
@@ -93,7 +93,7 @@ base 64: "aGVsbG8gbmV0d29yaw=="
 
 - [ ] caeser
 - [ ] vigenère
-- [ ] rot13
+- [x] rot13
 - [ ] substitution
 
 ### Crypto

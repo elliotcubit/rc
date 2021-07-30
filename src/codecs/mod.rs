@@ -4,5 +4,6 @@ pub mod codec;
 pub mod error;
 pub mod hex;
 pub mod raw;
+pub mod rot13;
 pub mod spelling;
 pub mod utf8;
