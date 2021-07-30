@@ -23,7 +23,7 @@ impl Codec for SpellingCodec {
 
     fn encode(&self, data: Vec<u8>) -> Result<String, Error> {
         match String::from_utf8(data.clone()) {
-            Ok(s) if s.is_ascii() => Ok(s
+            Ok(s) if s.chars().all(|c| c.is_ascii_alphabetic()) => Ok(s
                 .trim()
                 .to_ascii_lowercase()
                 .split_ascii_whitespace()
