@@ -23,18 +23,22 @@ impl Codec for SpellingCodec {
 
     fn encode(&self, data: Vec<u8>) -> Result<String, Error> {
         match String::from_utf8(data.clone()) {
-            Ok(s) if s.chars().all(|c| c.is_ascii_alphabetic()) => Ok(s
-                .trim()
-                .to_ascii_lowercase()
-                .split_ascii_whitespace()
-                .map(|word| {
-                    word.chars()
-                        .map(Self::char_to_word)
-                        .collect::<Vec<String>>()
-                        .join(" ")
-                })
-                .collect::<Vec<String>>()
-                .join(" ")),
+            Ok(s)
+                if s.chars()
+                    .all(|c| c.is_ascii_alphabetic() || c.is_ascii_whitespace()) =>
+            {
+                Ok(s.trim()
+                    .to_ascii_lowercase()
+                    .split_ascii_whitespace()
+                    .map(|word| {
+                        word.chars()
+                            .map(Self::char_to_word)
+                            .collect::<Vec<String>>()
+                            .join(" ")
+                    })
+                    .collect::<Vec<String>>()
+                    .join(" "))
+            }
             Ok(_) => Err(Error::new("input data is not ascii".to_string())),
             Err(_) => Err(Error::new("input data is not utf8".to_string())),
         }
